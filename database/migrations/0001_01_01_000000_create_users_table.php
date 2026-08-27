@@ -11,14 +11,34 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('business_settings', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('address')->nullable();
+            $table->string('currency', 10)->default('BDT');
+            $table->string('currency_symbol', 10)->default('৳');
+            $table->decimal('default_vat_rate', 5, 2)->default(0.00);
+            $table->string('logo')->nullable();
+            $table->string('invoice_footer_note')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('business_id')->nullable()->constrained('business_settings')->nullOnDelete();
+            $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('pin_code', 60)->nullable(); // Hashed 4-6 digit quick PIN
+            $table->enum('theme_preference', ['light', 'dark', 'system'])->default('system');
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -42,8 +62,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('business_settings');
     }
 };
